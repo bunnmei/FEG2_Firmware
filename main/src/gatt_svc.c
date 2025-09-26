@@ -5,7 +5,16 @@
 #include "persistance.h"
 
 static int temp_chr_access(uint16_t conn_handle, uint16_t attr_handle,
-                                 struct ble_gatt_access_ctxt *ctxt, void *arg);
+                                struct ble_gatt_access_ctxt *ctxt, void *arg);
+
+static int device_info_chr_access(uint16_t conn_handle, uint16_t attr_handle,
+                                struct ble_gatt_access_ctxt *ctxt, void *arg);
+static const char *firmware_version = "1.0.0";
+// static uint16_t firmware_v_chr_val_handle;
+static const ble_uuid16_t firmware_svc_uuid =
+    BLE_UUID16_INIT(0x180A); // Device Information Service
+static const ble_uuid16_t firmware_version_chr_uuid =
+    BLE_UUID16_INIT(0x2A26); // Firmware Revision String
 
 static const ble_uuid128_t temp_svc_uuid =
     BLE_UUID128_INIT(0xc0,0x43,0x12,0x76,0xc4,0x92,0x4d,0x80,0x35,0xb0,0x8c,0x71,0x4d,0x86,0x1b,0x81);
@@ -45,11 +54,28 @@ static uint8_t tm1640_brightness_write_val[1] = {0};
 
 /* GATT services table */
 static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
+    /* firmware service */
+    {.type = BLE_GATT_SVC_TYPE_PRIMARY,
+     .uuid = &firmware_svc_uuid.u,
+     .characteristics =
+         (struct ble_gatt_chr_def[]){
+            {/* firmware version characteristic */
+            .uuid = &firmware_version_chr_uuid.u,
+            .access_cb = device_info_chr_access,
+            .flags = BLE_GATT_CHR_F_READ,
+            // .val_handle = &firmware_v_chr_val_handle
+        },
+            {
+                0, /* No more characteristics in this service. */
+            }
+        }
+    },
     /* temp service */
     {.type = BLE_GATT_SVC_TYPE_PRIMARY,
      .uuid = &temp_svc_uuid.u,
      .characteristics =
          (struct ble_gatt_chr_def[]){
+            
             {/* temp one characteristic */
             .uuid = &temp_chr_uuid.u,
             .access_cb = temp_chr_access,
@@ -85,6 +111,15 @@ static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
         0, /* No more services. */
     },
 };
+
+static int device_info_chr_access(uint16_t conn_handle, uint16_t attr_handle,
+                                struct ble_gatt_access_ctxt *ctxt, void *arg) {
+    int rc;
+    rc = os_mbuf_append(ctxt->om, firmware_version,
+                                    strlen(firmware_version));
+
+    return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+}
 
 /* Private functions */
 static int temp_chr_access(uint16_t conn_handle, uint16_t attr_handle,

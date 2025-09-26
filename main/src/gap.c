@@ -17,7 +17,7 @@ static int gap_event_handler(struct ble_gap_event *event, void *arg);
 /* Private variables */
 static uint8_t own_addr_type;
 static uint8_t addr_val[6] = {0};
-static uint8_t esp_uri[] = {BLE_GAP_URI_PREFIX_HTTPS, '/', '/', 'e', 's', 'p', 'r', 'e', 's', 's', 'i', 'f', '.', 'c', 'o', 'm'};
+
 
 /* Private functions */
 inline static void format_addr(char *addr_str, uint8_t addr[]) {
@@ -93,8 +93,8 @@ static void start_advertising(void) {
     rsp_fields.device_addr_is_present = 1;
 
     /* Set URI */
-    rsp_fields.uri = esp_uri;
-    rsp_fields.uri_len = sizeof(esp_uri);
+    // rsp_fields.uri = esp_uri;
+    // rsp_fields.uri_len = sizeof(esp_uri);
 
     /* Set advertising interval */
     rsp_fields.adv_itvl = BLE_GAP_ADV_ITVL_MS(500);
